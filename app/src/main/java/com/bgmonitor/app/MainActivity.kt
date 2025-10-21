@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private var currentBGData: BGData? = null
+    private val logMessages = mutableListOf<String>()
 
     private val bgUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -38,8 +39,37 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 updateUI(bgData)
+                addLog("Received BG update: ${bgData.getGlucoseInt()} mg/dL")
             }
         }
+    }
+
+    private fun testBroadcastReception() {
+        addLog("Testing receiver with simulated data...")
+        val testIntent = Intent(XDripReceiver.ACTION_BG_UPDATE).apply {
+            putExtra(XDripReceiver.EXTRA_GLUCOSE, 120.0)
+            putExtra(XDripReceiver.EXTRA_TIMESTAMP, System.currentTimeMillis())
+            putExtra(XDripReceiver.EXTRA_SLOPE_ARROW, "Flat")
+            putExtra(XDripReceiver.EXTRA_DELTA, 0.0)
+        }
+        sendBroadcast(testIntent)
+        addLog("Test broadcast sent!")
+    }
+
+    private fun addLog(message: String) {
+        val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        val logEntry = "[$timestamp] $message"
+        logMessages.add(0, logEntry)
+
+        // Keep only last 20 messages
+        if (logMessages.size > 20) {
+            logMessages.removeAt(logMessages.size - 1)
+        }
+
+        runOnUiThread {
+            binding.tvRawData.text = logMessages.joinToString("\n")
+        }
+        Log.d(TAG, message)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,6 +105,15 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvStatus.text = "Service Status: Running\nWaiting for xDrip broadcasts..."
 
+        // Test button to simulate broadcast
+        binding.btnTestBroadcast.setOnClickListener {
+            testBroadcastReception()
+        }
+
+        addLog("App started")
+        addLog("Waiting for xDrip+ broadcasts...")
+        addLog("Action: ${XDripReceiver.XDRIP_ACTION_NEW_BG_ESTIMATE}")
+
         Log.d(TAG, "MainActivity started, listening for xDrip broadcasts")
     }
 
@@ -105,16 +144,9 @@ class MainActivity : AppCompatActivity() {
         val color = ContextCompat.getColor(this, bgData.getColorForValue())
         binding.tvBGValue.setTextColor(color)
 
-        // Update status with raw data for debugging
-        val debugInfo = JSONObject().apply {
-            put("glucose", glucoseValue)
-            put("timestamp", bgData.getFormattedTime())
-            put("trend", bgData.slopeArrow)
-            put("delta", bgData.delta)
-        }
         binding.tvStatus.text = "Service Status: Active\nLast Update: ${bgData.getFormattedTime()}"
-        binding.tvRawData.text = "Raw data:\n${debugInfo.toString(2)}"
 
+        addLog("BG: $glucoseValue mg/dL ${trendArrow}$deltaText")
         Log.d(TAG, "UI updated with BG: $glucoseValue mg/dL")
     }
 

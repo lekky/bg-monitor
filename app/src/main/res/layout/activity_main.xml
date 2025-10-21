@@ -44,6 +44,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTrend" />
 
+    <Button
+        android:id="@+id/btnTestBroadcast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Test Receiver"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvLastUpdate" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/statusCard"
         android:layout_width="0dp"
@@ -54,7 +64,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvLastUpdate"
+        app:layout_constraintTop_toBottomOf="@+id/btnTestBroadcast"
         app:layout_constraintVertical_bias="1.0">
 
         <LinearLayout
@@ -70,14 +80,19 @@
                 android:text="Service Status: Initializing..."
                 android:textSize="14sp" />
 
-            <TextView
-                android:id="@+id/tvRawData"
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="monospace"
-                android:text=""
-                android:textSize="12sp" />
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/tvRawData"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text=""
+                    android:textSize="12sp" />
+            </ScrollView>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

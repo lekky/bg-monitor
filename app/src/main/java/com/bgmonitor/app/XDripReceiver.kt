@@ -9,13 +9,29 @@ import org.json.JSONObject
 class XDripReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (context == null || intent == null) return
+        if (context == null || intent == null) {
+            Log.w(TAG, "Received null context or intent")
+            return
+        }
 
-        Log.d(TAG, "Received broadcast: ${intent.action}")
+        Log.d(TAG, "========== BROADCAST RECEIVED ==========")
+        Log.d(TAG, "Action: ${intent.action}")
+        Log.d(TAG, "Package: ${intent.`package`}")
+
+        // Log all extras
+        intent.extras?.let { bundle ->
+            Log.d(TAG, "Extras count: ${bundle.size()}")
+            for (key in bundle.keySet()) {
+                Log.d(TAG, "  $key = ${bundle.get(key)}")
+            }
+        }
 
         when (intent.action) {
             XDRIP_ACTION_NEW_BG_ESTIMATE -> {
                 handleXDripData(context, intent)
+            }
+            else -> {
+                Log.w(TAG, "Received unknown action: ${intent.action}")
             }
         }
     }

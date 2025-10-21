@@ -26,31 +26,36 @@ class XDripReceiver : BroadcastReceiver() {
             }
         }
 
-        when (intent.action) {
-            XDRIP_ACTION_NEW_BG_ESTIMATE -> {
-                handleXDripData(context, intent)
-            }
-            else -> {
-                Log.w(TAG, "Received unknown action: ${intent.action}")
-            }
+        // Handle any xDrip+ broadcast action
+        if (intent.action?.contains("dexdrip", ignoreCase = true) == true ||
+            intent.action == XDRIP_ACTION_NEW_BG_ESTIMATE) {
+            handleXDripData(context, intent)
+        } else {
+            Log.w(TAG, "Received unknown action: ${intent.action}")
         }
     }
 
     private fun handleXDripData(context: Context, intent: Intent) {
         try {
-            // Extract data from xDrip broadcast
-            val glucose = intent.getDoubleExtra("bgEstimate", 0.0)
-            val timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis())
-            val slopeArrow = intent.getStringExtra("slopeName") ?: ""
-            val delta = intent.getDoubleExtra("delta", 0.0)
+            Log.d(TAG, "Processing xDrip+ data...")
 
-            // Log all extras for debugging
-            val extras = intent.extras
-            val debugInfo = JSONObject()
-            extras?.keySet()?.forEach { key ->
-                debugInfo.put(key, extras.get(key).toString())
-            }
-            Log.d(TAG, "Received data: $debugInfo")
+            // Extract data from xDrip broadcast - try multiple field names
+            var glucose = intent.getDoubleExtra("bgEstimate", 0.0)
+            if (glucose == 0.0) glucose = intent.getDoubleExtra("bg", 0.0)
+            if (glucose == 0.0) glucose = intent.getDoubleExtra("glucoseLevel", 0.0)
+            if (glucose == 0.0) glucose = intent.getDoubleExtra("sgv", 0.0) // Nightscout format
+
+            var timestamp = intent.getLongExtra("timestamp", 0L)
+            if (timestamp == 0L) timestamp = System.currentTimeMillis()
+
+            var slopeArrow = intent.getStringExtra("slopeName") ?: ""
+            if (slopeArrow.isEmpty()) slopeArrow = intent.getStringExtra("slope_name") ?: ""
+            if (slopeArrow.isEmpty()) slopeArrow = intent.getStringExtra("direction") ?: ""
+
+            var delta = intent.getDoubleExtra("delta", 0.0)
+            if (delta == 0.0) delta = intent.getDoubleExtra("bgDelta", 0.0)
+
+            Log.d(TAG, "Extracted: glucose=$glucose, timestamp=$timestamp, slope=$slopeArrow, delta=$delta")
 
             if (glucose > 0) {
                 val bgData = BGData(
@@ -60,7 +65,7 @@ class XDripReceiver : BroadcastReceiver() {
                     delta = delta
                 )
 
-                Log.d(TAG, "Blood Glucose: ${bgData.getGlucoseInt()} mg/dL, " +
+                Log.d(TAG, "✓ Valid BG data: ${bgData.getGlucoseInt()} mg/dL, " +
                         "Trend: ${bgData.getTrendArrow()}, Time: ${bgData.getFormattedTime()}")
 
                 // Broadcast to the app
@@ -71,12 +76,16 @@ class XDripReceiver : BroadcastReceiver() {
                     putExtra(EXTRA_DELTA, delta)
                 }
                 context.sendBroadcast(localIntent)
+                Log.d(TAG, "✓ Local broadcast sent to MainActivity")
 
                 // Update notification if service is running
                 BGMonitorService.updateNotification(context, bgData)
+                Log.d(TAG, "✓ Notification updated")
+            } else {
+                Log.w(TAG, "⚠ No valid glucose value found in broadcast!")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing xDrip data", e)
+            Log.e(TAG, "❌ Error processing xDrip data", e)
         }
     }
 

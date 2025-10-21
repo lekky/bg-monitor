@@ -24,6 +24,26 @@ class MainActivity : AppCompatActivity() {
     private val logMessages = mutableListOf<String>()
     private var useMmol = true // Default to mmol/L
 
+    // Receiver for xDrip+ broadcasts (direct)
+    private val xDripDirectReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (context == null || intent == null) return
+
+            addLog("★ XDRIP BROADCAST RECEIVED! ★")
+            addLog("Action: ${intent.action}")
+
+            // Log all extras
+            intent.extras?.let { bundle ->
+                for (key in bundle.keySet()) {
+                    addLog("  $key = ${bundle.get(key)}")
+                }
+            }
+
+            // Forward to XDripReceiver for processing
+            XDripReceiver().onReceive(context, intent)
+        }
+    }
+
     private val bgUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == XDripReceiver.ACTION_BG_UPDATE) {
@@ -100,6 +120,21 @@ class MainActivity : AppCompatActivity() {
         // Start the foreground service
         BGMonitorService.start(this)
 
+        // Register receiver for xDrip+ broadcasts DIRECTLY
+        val xDripFilter = IntentFilter().apply {
+            addAction("com.eveningoutpost.dexdrip.BgEstimate")
+            // Some xDrip+ variants use different actions
+            addAction("com.eveningoutpost.dexdrip.g5.BgEstimate")
+            addAction("com.eveningoutpost.dexdrip.NS_EMULATOR")
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(xDripDirectReceiver, xDripFilter, Context.RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(xDripDirectReceiver, xDripFilter)
+        }
+        addLog("✓ Registered for xDrip+ broadcasts (EXPORTED)")
+
         // Register receiver for BG updates
         val filter = IntentFilter(XDripReceiver.ACTION_BG_UPDATE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -131,8 +166,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         addLog("App started")
-        addLog("Waiting for xDrip+ broadcasts...")
-        addLog("Action: ${XDripReceiver.XDRIP_ACTION_NEW_BG_ESTIMATE}")
+        addLog("Listening for xDrip+ broadcasts:")
+        addLog("  • com.eveningoutpost.dexdrip.BgEstimate")
+        addLog("  • com.eveningoutpost.dexdrip.g5.BgEstimate")
+        addLog("  • com.eveningoutpost.dexdrip.NS_EMULATOR")
+        addLog("")
+        addLog("Waiting for data...")
 
         Log.d(TAG, "MainActivity started, listening for xDrip broadcasts")
     }
@@ -140,6 +179,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         try {
+            unregisterReceiver(xDripDirectReceiver)
             unregisterReceiver(bgUpdateReceiver)
         } catch (e: Exception) {
             Log.e(TAG, "Error unregistering receiver", e)

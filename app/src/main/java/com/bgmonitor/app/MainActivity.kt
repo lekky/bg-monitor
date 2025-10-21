@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         // Register receiver for BG updates
         val filter = IntentFilter(XDripReceiver.ACTION_BG_UPDATE)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(bgUpdateReceiver, filter, RECEIVER_NOT_EXPORTED)
+            registerReceiver(bgUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(bgUpdateReceiver, filter)
         }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BG Monitor</string>
+    <string name="waiting_for_data">Waiting for blood glucose data...</string>
+    <string name="bg_value">%1$s mg/dL</string>
+    <string name="last_update">Last update: %1$s</string>
+    <string name="trend_arrow">Trend: %1$s</string>
+    <string name="no_data">No data received yet</string>
+    <string name="notification_channel_name">Blood Glucose Monitor</string>
+    <string name="notification_channel_description">Shows current blood glucose readings</string>
+    <string name="notification_title">BG Monitor Active</string>
+    <string name="notification_text">Monitoring blood glucose: %1$s mg/dL</string>
+</resources>

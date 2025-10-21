@@ -37,7 +37,9 @@ class XDripReceiver : BroadcastReceiver() {
 
     private fun sendLog(context: Context, message: String) {
         Log.d(TAG, message)
+        // Make log broadcast explicit too
         context.sendBroadcast(Intent(MainActivity.ACTION_LOG_MESSAGE).apply {
+            setPackage(context.packageName)
             putExtra(MainActivity.EXTRA_LOG_MESSAGE, message)
         })
     }
@@ -82,15 +84,16 @@ class XDripReceiver : BroadcastReceiver() {
 
                 sendLog(context, "✓ Valid BG data: ${bgData.getGlucoseInt()} mg/dL ${bgData.getTrendArrow()}")
 
-                // Broadcast to the app
+                // Broadcast to the app - make it explicit to ensure delivery
                 val localIntent = Intent(ACTION_BG_UPDATE).apply {
+                    setPackage(context.packageName) // Explicit broadcast to our app
                     putExtra(EXTRA_GLUCOSE, glucose)
                     putExtra(EXTRA_TIMESTAMP, timestamp)
                     putExtra(EXTRA_SLOPE_ARROW, slopeArrow)
                     putExtra(EXTRA_DELTA, delta)
                 }
                 context.sendBroadcast(localIntent)
-                sendLog(context, "✓ Sent BG_UPDATE broadcast to MainActivity")
+                sendLog(context, "✓ Sent BG_UPDATE broadcast (explicit to ${context.packageName})")
 
                 // Update notification if service is running
                 BGMonitorService.updateNotification(context, bgData)

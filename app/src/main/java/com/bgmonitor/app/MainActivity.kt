@@ -8,12 +8,17 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.bgmonitor.app.databinding.ActivityMainBinding
 import org.json.JSONObject
+import java.io.File
+import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -79,6 +84,55 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUnitsButton() {
         binding.btnToggleUnits.text = if (useMmol) "mmol/L" else "mg/dL"
+    }
+
+    private fun exportLogs() {
+        try {
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val filename = "bgmonitor_logs_$timestamp.txt"
+
+            // Create file in cache directory
+            val file = File(cacheDir, filename)
+
+            // Write logs to file
+            FileWriter(file).use { writer ->
+                writer.write("BG Monitor Debug Logs\n")
+                writer.write("Generated: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}\n")
+                writer.write("=".repeat(50) + "\n\n")
+
+                // Write logs in reverse order (newest first)
+                logMessages.asReversed().forEach { log ->
+                    writer.write("$log\n")
+                }
+
+                writer.write("\n" + "=".repeat(50) + "\n")
+                writer.write("End of logs\n")
+            }
+
+            // Share the file using FileProvider
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                file
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "BG Monitor Logs")
+                putExtra(Intent.EXTRA_TEXT, "Debug logs from BG Monitor app")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            startActivity(Intent.createChooser(shareIntent, "Export Logs"))
+            addLog("Logs exported to $filename")
+            Toast.makeText(this, "Logs exported successfully", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error exporting logs", e)
+            addLog("ERROR exporting logs: ${e.message}")
+            Toast.makeText(this, "Error exporting logs: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun addLog(message: String) {
@@ -163,6 +217,11 @@ class MainActivity : AppCompatActivity() {
             // Re-render current data if available
             currentBGData?.let { updateUI(it) }
             addLog("Switched to ${if (useMmol) "mmol/L" else "mg/dL"}")
+        }
+
+        // Export logs button
+        binding.btnExportLogs.setOnClickListener {
+            exportLogs()
         }
 
         addLog("App started")

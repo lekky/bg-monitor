@@ -40,19 +40,24 @@ class XDripReceiver : BroadcastReceiver() {
             Log.d(TAG, "Processing xDrip+ data...")
 
             // Extract data from xDrip broadcast - try multiple field names
-            var glucose = intent.getDoubleExtra("bgEstimate", 0.0)
+            // Try with xDrip+ prefix first (com.eveningoutpost.dexdrip.Extras.*)
+            var glucose = intent.getDoubleExtra("com.eveningoutpost.dexdrip.Extras.BgEstimate", 0.0)
+            if (glucose == 0.0) glucose = intent.getDoubleExtra("bgEstimate", 0.0)
             if (glucose == 0.0) glucose = intent.getDoubleExtra("bg", 0.0)
             if (glucose == 0.0) glucose = intent.getDoubleExtra("glucoseLevel", 0.0)
             if (glucose == 0.0) glucose = intent.getDoubleExtra("sgv", 0.0) // Nightscout format
 
-            var timestamp = intent.getLongExtra("timestamp", 0L)
+            var timestamp = intent.getLongExtra("com.eveningoutpost.dexdrip.Extras.Time", 0L)
+            if (timestamp == 0L) timestamp = intent.getLongExtra("timestamp", 0L)
             if (timestamp == 0L) timestamp = System.currentTimeMillis()
 
-            var slopeArrow = intent.getStringExtra("slopeName") ?: ""
+            var slopeArrow = intent.getStringExtra("com.eveningoutpost.dexdrip.Extras.BgSlopeName") ?: ""
+            if (slopeArrow.isEmpty()) slopeArrow = intent.getStringExtra("slopeName") ?: ""
             if (slopeArrow.isEmpty()) slopeArrow = intent.getStringExtra("slope_name") ?: ""
             if (slopeArrow.isEmpty()) slopeArrow = intent.getStringExtra("direction") ?: ""
 
-            var delta = intent.getDoubleExtra("delta", 0.0)
+            var delta = intent.getDoubleExtra("com.eveningoutpost.dexdrip.Extras.BgSlope", 0.0)
+            if (delta == 0.0) delta = intent.getDoubleExtra("delta", 0.0)
             if (delta == 0.0) delta = intent.getDoubleExtra("bgDelta", 0.0)
 
             Log.d(TAG, "Extracted: glucose=$glucose, timestamp=$timestamp, slope=$slopeArrow, delta=$delta")

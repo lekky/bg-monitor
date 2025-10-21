@@ -24,13 +24,22 @@ An Android app that displays real-time blood glucose values from xDrip+ broadcas
 
 ## Installation
 
-See [BUILD.md](BUILD.md) for detailed build instructions.
+### Download Pre-built APK
 
-Quick install:
-1. Download the APK from releases
-2. Enable "Install from Unknown Sources" in Android settings
-3. Install the APK
-4. Grant notification permissions
+The APK is automatically built by GitHub Actions on every push:
+
+1. Go to the [Actions tab](../../actions) in this repository
+2. Click on the latest successful workflow run
+3. Scroll down to "Artifacts"
+4. Download `bg-monitor-debug`
+5. Extract the ZIP file to get `app-debug.apk`
+6. Transfer to your Android device and install
+7. Enable "Install from Unknown Sources" in Android settings if prompted
+8. Grant notification permissions when the app launches
+
+### Build from Source
+
+See [BUILD.md](BUILD.md) for detailed build instructions if you prefer to build it yourself.
 
 ## How It Works
 

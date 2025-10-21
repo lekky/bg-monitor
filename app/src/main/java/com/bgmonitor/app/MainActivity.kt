@@ -44,6 +44,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            // Extract and log glucose data
+            val glucose = intent.getDoubleExtra("com.eveningoutpost.dexdrip.Extras.BgEstimate", 0.0)
+            val slope = intent.getStringExtra("com.eveningoutpost.dexdrip.Extras.BgSlopeName") ?: ""
+            addLog("→ Extracting: glucose=$glucose, slope=$slope")
+
             // Forward to XDripReceiver for processing
             XDripReceiver().onReceive(context, intent)
         }
@@ -57,6 +62,9 @@ class MainActivity : AppCompatActivity() {
                 val slopeArrow = intent.getStringExtra(XDripReceiver.EXTRA_SLOPE_ARROW) ?: ""
                 val delta = intent.getDoubleExtra(XDripReceiver.EXTRA_DELTA, 0.0)
 
+                addLog("✓ BG UPDATE RECEIVED from XDripReceiver")
+                addLog("  glucose=$glucose, slope=$slopeArrow, delta=$delta")
+
                 val bgData = BGData(
                     glucose = glucose,
                     timestamp = timestamp,
@@ -65,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 updateUI(bgData)
-                addLog("Received BG update: ${bgData.getGlucoseInt()} mg/dL")
+                addLog("✓ UI updated with BG: ${bgData.getGlucoseInt()} mg/dL")
             }
         }
     }
@@ -202,7 +210,9 @@ class MainActivity : AppCompatActivity() {
         useMmol = prefs.getBoolean("useMmol", true)
         updateUnitsButton()
 
-        binding.tvStatus.text = "Service Status: Running\nWaiting for xDrip broadcasts..."
+        // Get version info
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+        binding.tvStatus.text = "BG Monitor v$versionName\nService Status: Running\nWaiting for xDrip broadcasts..."
 
         // Test button to simulate broadcast
         binding.btnTestBroadcast.setOnClickListener {
@@ -263,9 +273,10 @@ class MainActivity : AppCompatActivity() {
         val color = ContextCompat.getColor(this, bgData.getColorForValue())
         binding.tvBGValue.setTextColor(color)
 
-        binding.tvStatus.text = "Service Status: Active\nLast Update: ${bgData.getFormattedTime()}"
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+        binding.tvStatus.text = "BG Monitor v$versionName\nService Status: Active\nLast Update: ${bgData.getFormattedTime()}"
 
-        addLog("BG: $glucoseValue $units $trendArrow$deltaText")
+        addLog("→ Display updated: $glucoseValue $units $trendArrow$deltaText")
         Log.d(TAG, "UI updated with BG: $glucoseValue $units")
     }
 

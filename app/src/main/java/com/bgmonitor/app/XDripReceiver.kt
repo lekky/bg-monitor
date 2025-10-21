@@ -35,9 +35,16 @@ class XDripReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun sendLog(context: Context, message: String) {
+        Log.d(TAG, message)
+        context.sendBroadcast(Intent(MainActivity.ACTION_LOG_MESSAGE).apply {
+            putExtra(MainActivity.EXTRA_LOG_MESSAGE, message)
+        })
+    }
+
     private fun handleXDripData(context: Context, intent: Intent) {
         try {
-            Log.d(TAG, "Processing xDrip+ data...")
+            sendLog(context, "→ Processing xDrip+ data...")
 
             // Extract data from xDrip broadcast - try multiple field names
             // Try with xDrip+ prefix first (com.eveningoutpost.dexdrip.Extras.*)
@@ -60,7 +67,10 @@ class XDripReceiver : BroadcastReceiver() {
             if (delta == 0.0) delta = intent.getDoubleExtra("delta", 0.0)
             if (delta == 0.0) delta = intent.getDoubleExtra("bgDelta", 0.0)
 
-            Log.d(TAG, "Extracted: glucose=$glucose, timestamp=$timestamp, slope=$slopeArrow, delta=$delta")
+            sendLog(context, "→ Extracted values:")
+            sendLog(context, "  glucose=$glucose mg/dL")
+            sendLog(context, "  slope=$slopeArrow")
+            sendLog(context, "  delta=$delta")
 
             if (glucose > 0) {
                 val bgData = BGData(
@@ -70,8 +80,7 @@ class XDripReceiver : BroadcastReceiver() {
                     delta = delta
                 )
 
-                Log.d(TAG, "✓ Valid BG data: ${bgData.getGlucoseInt()} mg/dL, " +
-                        "Trend: ${bgData.getTrendArrow()}, Time: ${bgData.getFormattedTime()}")
+                sendLog(context, "✓ Valid BG data: ${bgData.getGlucoseInt()} mg/dL ${bgData.getTrendArrow()}")
 
                 // Broadcast to the app
                 val localIntent = Intent(ACTION_BG_UPDATE).apply {
@@ -81,16 +90,17 @@ class XDripReceiver : BroadcastReceiver() {
                     putExtra(EXTRA_DELTA, delta)
                 }
                 context.sendBroadcast(localIntent)
-                Log.d(TAG, "✓ Local broadcast sent to MainActivity")
+                sendLog(context, "✓ Sent BG_UPDATE broadcast to MainActivity")
 
                 // Update notification if service is running
                 BGMonitorService.updateNotification(context, bgData)
-                Log.d(TAG, "✓ Notification updated")
+                sendLog(context, "✓ Notification updated")
             } else {
-                Log.w(TAG, "⚠ No valid glucose value found in broadcast!")
+                sendLog(context, "⚠ ERROR: No valid glucose value!")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Error processing xDrip data", e)
+            sendLog(context, "❌ ERROR: ${e.message}")
+            Log.e(TAG, "Error processing xDrip data", e)
         }
     }
 

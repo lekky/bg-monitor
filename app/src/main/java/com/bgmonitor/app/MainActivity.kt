@@ -78,6 +78,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val logReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ACTION_LOG_MESSAGE) {
+                val message = intent.getStringExtra(EXTRA_LOG_MESSAGE) ?: return
+                addLog(message)
+            }
+        }
+    }
+
     private fun testBroadcastReception() {
         addLog("Testing receiver with simulated data...")
         val testIntent = Intent(XDripReceiver.ACTION_BG_UPDATE).apply {
@@ -205,6 +214,14 @@ class MainActivity : AppCompatActivity() {
             registerReceiver(bgUpdateReceiver, filter)
         }
 
+        // Register receiver for log messages from XDripReceiver
+        val logFilter = IntentFilter(ACTION_LOG_MESSAGE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(logReceiver, logFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(logReceiver, logFilter)
+        }
+
         // Load preference for units
         val prefs = getSharedPreferences("BGMonitorPrefs", MODE_PRIVATE)
         useMmol = prefs.getBoolean("useMmol", true)
@@ -250,6 +267,7 @@ class MainActivity : AppCompatActivity() {
         try {
             unregisterReceiver(xDripDirectReceiver)
             unregisterReceiver(bgUpdateReceiver)
+            unregisterReceiver(logReceiver)
         } catch (e: Exception) {
             Log.e(TAG, "Error unregistering receiver", e)
         }
@@ -283,5 +301,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 100
+        const val ACTION_LOG_MESSAGE = "com.bgmonitor.app.LOG_MESSAGE"
+        const val EXTRA_LOG_MESSAGE = "log_message"
     }
 }

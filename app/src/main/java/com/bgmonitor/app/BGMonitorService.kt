@@ -81,7 +81,13 @@ class BGMonitorService : Service() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
-            val contentText = "${bgData.getGlucoseInt()} mg/dL ${bgData.getTrendArrow()}"
+            // Load units preference
+            val prefs = context.getSharedPreferences("BGMonitorPrefs", Context.MODE_PRIVATE)
+            val useMmol = prefs.getBoolean("useMmol", true)
+
+            val glucoseValue = bgData.getGlucoseFormatted(useMmol)
+            val units = if (useMmol) "mmol/L" else "mg/dL"
+            val contentText = "$glucoseValue $units ${bgData.getTrendArrow()}"
 
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(context.getString(R.string.notification_title))

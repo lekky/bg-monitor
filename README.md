@@ -5,17 +5,19 @@ An Android app that displays real-time blood glucose values from xDrip+ broadcas
 ## Features
 
 - **Real-time BG Display** - Shows current blood glucose reading in large, easy-to-read format
+- **Multiple Units** - Toggle between mg/dL and mmol/L with a single tap
 - **Trend Arrows** - Visual indicators for glucose trends (rising, falling, stable)
-- **Delta Values** - Shows rate of change in mg/dL
+- **Delta Values** - Shows rate of change in your preferred units
 - **Color-Coded Alerts** - Different colors for low, normal, high, and very high glucose levels
 - **Persistent Notification** - Always-visible notification with current BG value
 - **Background Monitoring** - Foreground service ensures continuous monitoring
+- **Debug Mode** - Built-in testing and logging to troubleshoot xDrip+ connection
 
 ## Color Coding
 
-- **Red**: Low (< 70 mg/dL) or Very High (> 250 mg/dL)
-- **Green**: Normal (70-180 mg/dL)
-- **Orange**: High (180-250 mg/dL)
+- **Red**: Low (< 70 mg/dL / 3.9 mmol/L) or Very High (> 250 mg/dL / 13.9 mmol/L)
+- **Green**: Normal (70-180 mg/dL / 3.9-10.0 mmol/L)
+- **Orange**: High (180-250 mg/dL / 10.0-13.9 mmol/L)
 
 ## Requirements
 

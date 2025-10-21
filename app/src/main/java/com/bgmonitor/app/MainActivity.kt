@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var currentBGData: BGData? = null
     private val logMessages = mutableListOf<String>()
+    private var useMmol = true // Default to mmol/L
 
     private val bgUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -54,6 +55,10 @@ class MainActivity : AppCompatActivity() {
         }
         sendBroadcast(testIntent)
         addLog("Test broadcast sent!")
+    }
+
+    private fun updateUnitsButton() {
+        binding.btnToggleUnits.text = if (useMmol) "mmol/L" else "mg/dL"
     }
 
     private fun addLog(message: String) {
@@ -103,11 +108,26 @@ class MainActivity : AppCompatActivity() {
             registerReceiver(bgUpdateReceiver, filter)
         }
 
+        // Load preference for units
+        val prefs = getSharedPreferences("BGMonitorPrefs", MODE_PRIVATE)
+        useMmol = prefs.getBoolean("useMmol", true)
+        updateUnitsButton()
+
         binding.tvStatus.text = "Service Status: Running\nWaiting for xDrip broadcasts..."
 
         // Test button to simulate broadcast
         binding.btnTestBroadcast.setOnClickListener {
             testBroadcastReception()
+        }
+
+        // Toggle units button
+        binding.btnToggleUnits.setOnClickListener {
+            useMmol = !useMmol
+            prefs.edit().putBoolean("useMmol", useMmol).apply()
+            updateUnitsButton()
+            // Re-render current data if available
+            currentBGData?.let { updateUI(it) }
+            addLog("Switched to ${if (useMmol) "mmol/L" else "mg/dL"}")
         }
 
         addLog("App started")
@@ -129,14 +149,14 @@ class MainActivity : AppCompatActivity() {
     private fun updateUI(bgData: BGData) {
         currentBGData = bgData
 
-        val glucoseValue = bgData.getGlucoseInt()
+        val glucoseValue = bgData.getGlucoseFormatted(useMmol)
         val trendArrow = bgData.getTrendArrow()
+        val units = if (useMmol) "mmol/L" else "mg/dL"
         val deltaText = if (bgData.delta != 0.0) {
-            val sign = if (bgData.delta > 0) "+" else ""
-            " (${sign}${String.format("%.1f", bgData.delta)})"
+            " (${bgData.getDeltaFormatted(useMmol)})"
         } else ""
 
-        binding.tvBGValue.text = "$glucoseValue"
+        binding.tvBGValue.text = glucoseValue
         binding.tvTrend.text = "$trendArrow$deltaText"
         binding.tvLastUpdate.text = getString(R.string.last_update, bgData.getFormattedTime())
 
@@ -146,8 +166,8 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvStatus.text = "Service Status: Active\nLast Update: ${bgData.getFormattedTime()}"
 
-        addLog("BG: $glucoseValue mg/dL ${trendArrow}$deltaText")
-        Log.d(TAG, "UI updated with BG: $glucoseValue mg/dL")
+        addLog("BG: $glucoseValue $units $trendArrow$deltaText")
+        Log.d(TAG, "UI updated with BG: $glucoseValue $units")
     }
 
     companion object {

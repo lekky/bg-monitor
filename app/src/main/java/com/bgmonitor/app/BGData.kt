@@ -17,6 +17,26 @@ data class BGData(
 
     fun getGlucoseInt(): Int = glucose.toInt()
 
+    fun getGlucoseMmol(): Double = glucose / 18.018
+
+    fun getGlucoseFormatted(useMmol: Boolean): String {
+        return if (useMmol) {
+            String.format("%.1f", getGlucoseMmol())
+        } else {
+            getGlucoseInt().toString()
+        }
+    }
+
+    fun getDeltaFormatted(useMmol: Boolean): String {
+        val deltaValue = if (useMmol) delta / 18.018 else delta
+        val sign = if (delta > 0) "+" else ""
+        return if (useMmol) {
+            "$sign${String.format("%.1f", deltaValue)}"
+        } else {
+            "$sign${String.format("%.1f", deltaValue)}"
+        }
+    }
+
     fun getTrendArrow(): String {
         return when (slopeArrow) {
             "DoubleUp" -> "⇈"
@@ -32,10 +52,10 @@ data class BGData(
 
     fun getColorForValue(): Int {
         return when {
-            glucose < 70 -> R.color.bg_low
-            glucose < 180 -> R.color.bg_normal
-            glucose < 250 -> R.color.bg_high
-            else -> R.color.bg_very_high
+            glucose < 70 -> R.color.bg_low       // < 3.9 mmol/L
+            glucose < 180 -> R.color.bg_normal   // 3.9-10.0 mmol/L
+            glucose < 250 -> R.color.bg_high     // 10.0-13.9 mmol/L
+            else -> R.color.bg_very_high         // > 13.9 mmol/L
         }
     }
 }

@@ -44,15 +44,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTrend" />
 
-    <Button
-        android:id="@+id/btnTestBroadcast"
+    <LinearLayout
+        android:id="@+id/buttonLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Test Receiver"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvLastUpdate" />
+        app:layout_constraintTop_toBottomOf="@+id/tvLastUpdate">
+
+        <Button
+            android:id="@+id/btnTestBroadcast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="Test Receiver" />
+
+        <Button
+            android:id="@+id/btnToggleUnits"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="mg/dL" />
+    </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/statusCard"
@@ -64,7 +78,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnTestBroadcast"
+        app:layout_constraintTop_toBottomOf="@+id/buttonLayout"
         app:layout_constraintVertical_bias="1.0">
 
         <LinearLayout
